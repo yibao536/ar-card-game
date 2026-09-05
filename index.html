@@ -9,7 +9,6 @@
     html, body { height: 100%; overflow: hidden; background: #000;
       font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
 
-    /* 底部扫描提示 */
     #hint {
       position: fixed; left: 50%; bottom: max(28px, env(safe-area-inset-bottom));
       transform: translateX(-50%);
@@ -21,7 +20,6 @@
     }
     #hint.show { opacity: 1; }
 
-    /* 启动加载层 */
     #overlay {
       position: fixed; inset: 0; z-index: 20;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
@@ -34,109 +32,4 @@
       animation: spin 0.9s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #err { color: #ff7b72; font-size: 14px; max-width: 320px; line-height: 1.6; }
-  </style>
-
-  <!-- ===== 三个核心库（顺序固定：A-Frame → MindAR → aframe-extras）===== -->
-  <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-</head>
-<body>
-
-  <div id="overlay">
-    <div class="spinner"></div>
-    <div>正在启动相机…</div>
-    <div id="err"></div>
-  </div>
-  <div id="hint">将卡片放入画面，即可召唤怪物</div>
-
-  <!--
-    imageTargetSrc 指向你自己编译的识别目标文件（见使用说明）。
-    filterMinCF / filterBeta / missTolerance 是可选跟踪参数，识别不稳时可微调。
-  -->
-  <a-scene 
-  embedded 
-  arjs="sourceType: webcam; 
-        debugUIEnabled: false;
-        facingMode: environment;
-        videoTexture: true;
-        canvasWidth: 640; 
-        canvasHeight: 480;">
-
-    <a-assets>
-      <!--
-        模型默认从 CDN 加载（已确认允许跨域），部署时只需拖 index.html + targets.mind。
-        如果你想完全自托管：把 monster.glb 也拖进 Netlify Drop，并把下面这行改成
-        <a-asset-item id="monster" src="./monster.glb"></a-asset-item>
-      -->
-      <a-asset-item id="monster" src="https://cdn.jsdelivr.net/gh/bsaleh1/ZombieGame@main/monster.glb"></a-asset-item>
-    </a-assets>
-
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-    <!-- 识别到卡片后，卡片平面中心即为坐标原点 -->
-    <a-entity mindar-image-target="targetIndex: 0">
-
-      <!-- 底部光环：两层同心圆模拟发光 -->
-      <a-ring radius-inner="0.26" radius-outer="0.32" color="#00E5FF"
-              position="0 0.012 0" rotation="-90 0 0"
-              material="side: double; transparent: true; opacity: 0.9"></a-ring>
-      <a-ring radius-inner="0.32" radius-outer="0.38" color="#00E5FF"
-              position="0 0.006 0" rotation="-90 0 0"
-              material="side: double; transparent: true; opacity: 0.35"></a-ring>
-
-      <!--
-        怪物：scale 0.3（约卡片宽度的 1/3，不再撑满屏幕）
-        模型脚底在 Y=-0.80，所以抬高 0.24 让脚底刚好踩在卡面上
-        动画：播放模型自带的 walk 循环走路；不需要可删掉 animation-mixer
-      -->
-      <a-entity gltf-model="#monster" tint-model
-                scale="0.3 0.3 0.3" position="0 0.24 0"
-                animation-mixer="clip: walk; loop: repeat"></a-entity>
-    </a-entity>
-
-    <!-- 灯光：模型原色偏暗，加足光照才能看清 -->
-    <a-entity light="type: ambient; intensity: 0.65"></a-entity>
-    <a-entity light="type: directional; intensity: 1.0" position="1 2 1"></a-entity>
-    <a-entity light="type: directional; intensity: 0.35" position="-1 1 -1"></a-entity>
-  </a-scene>
-
-  <script>
-    // ===== 怪物上色：把原模型的深黑色调成翠绿 + 微发光，看起来更醒目 =====
-    // 想换颜色改 color 和 emissive 两行的色值即可
-    AFRAME.registerComponent('tint-model', {
-      init: function () {
-        this.el.addEventListener('model-loaded', () => {
-          this.el.object3D.traverse((obj) => {
-            if (obj.isMesh) {
-              obj.material.color.set('#63B24A');
-              obj.material.metalness = 0.15;
-              obj.material.roughness = 0.6;
-              obj.material.emissive = new THREE.Color('#2a5e20');
-              obj.material.emissiveIntensity = 0.25;
-            }
-          });
-        });
-      }
-    });
-
-    // ===== 启动遮罩：几秒后隐藏，露出相机画面 =====
-    const overlay = document.getElementById('overlay');
-    const hint = document.getElementById('hint');
-    const errEl = document.getElementById('err');
-    let started = false;
-    function onStart() {
-      if (started) return;
-      started = true;
-      overlay.classList.add('hidden');
-      hint.classList.add('show');
-    }
-    setTimeout(onStart, 2500); // 兜底：无论相机是否就绪都放行
-    window.addEventListener('error', (e) => {
-      errEl.textContent = '启动失败：' + (e.message || '未知错误') +
-        '。请确认：页面是 HTTPS、已允许摄像头权限。';
-    });
-  </script>
-</body>
-</html>
+    #err { color: #ff7b72; font-size: 14px;
