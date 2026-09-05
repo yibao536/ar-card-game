@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Monster Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  <script>
+    AFRAME.registerComponent('tint-model', {
+      init: function () {
+        this.el.addEventListener('model-loaded', () => {
+          this.el.object3D.traverse((obj) => {
+            if (obj.isMesh) {
+              obj.material.color.set('#63B24A');
+              obj.material.metalness = 0.15;
+              obj.material.roughness = 0.6;
+              obj.material.emissive = new THREE.Color('#2a5e20');
+              obj.material.emissiveIntensity = 0.25;
+            }
+          });
+        });
+      }
+    });
+  </script>
+  <style>body { margin: 0; overflow: hidden; }</style>
+</head>
+<body>
+  <a-scene background="color: #b7c4d4" renderer="colorManagement: true">
+    <a-assets>
+      <a-asset-item id="monster" src="https://cdn.jsdelivr.net/gh/bsaleh1/ZombieGame@main/monster.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 1.1 2.2" look-controls="enabled: false"></a-camera>
+
+    <a-entity light="type: ambient; intensity: 0.7"></a-entity>
+    <a-entity light="type: directional; intensity: 1.1" position="1.5 2.5 1.5"></a-entity>
+    <a-entity light="type: directional; intensity: 0.4" position="-1.5 1 -2"></a-entity>
+
+    <!-- 底部光环 -->
+    <a-ring radius-inner="0.24" radius-outer="0.30" color="#00E5FF" position="0 0.01 0" rotation="-90 0 0" material="side: double; transparent: true; opacity: 0.9"></a-ring>
+    <a-ring radius-inner="0.30" radius-outer="0.36" color="#00E5FF" position="0 0.005 0" rotation="-90 0 0" material="side: double; transparent: true; opacity: 0.35"></a-ring>
+
+    <!-- 怪物：scale 0.3, 脚底贴合卡片 -->
+    <a-entity gltf-model="#monster" tint-model scale="0.3 0.3 0.3" position="0 0.24 0" animation-mixer="clip: walk; loop: repeat"></a-entity>
+  </a-scene>
+</body>
+</html>
