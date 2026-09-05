@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR卡牌 - Hiro标记版</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    
+    /* 加载提示 */
+    #loading {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #0d1117; color: #fff; z-index: 999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-family: system-ui, sans-serif; font-size: 16px; gap: 12px;
+      transition: opacity 0.5s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid #333;
+      border-top-color: #00E5FF; border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* 扫描提示 */
+    #hint {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px;
+      border-radius: 20px; font-family: sans-serif; font-size: 14px;
+      z-index: 10; pointer-events: none; opacity: 0; transition: opacity 0.5s;
+    }
+    #hint.show { opacity: 1; }
+    
+    /* 左上角调试 */
+    #debug {
+      position: fixed; top: 8px; left: 8px; z-index: 20;
+      color: #0f0; font-size: 11px; font-family: monospace;
+      background: rgba(0,0,0,0.8); padding: 6px 10px; border-radius: 4px;
+      max-width: 70vw; line-height: 1.5;
+    }
+  </style>
+  
+  <!-- 纯AR.js，没有MindAR，没有混用 -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+<body>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <div>正在启动摄像头…</div>
+    <div style="font-size:13px;color:#888;margin-top:8px;">请允许摄像头权限</div>
+  </div>
+  
+  <div id="hint">请对准 Hiro 标记图片</div>
+  <div id="debug">等待初始化…</div>
+
+  <!-- 
+    纯AR.js场景：
+    - sourceType: webcam → 用摄像头
+    - debugUIEnabled: false → 隐藏AR.js自带的调试面板
+    - detectionMode: mono → 单目摄像头模式（手机标配）
+  -->
+  <a-scene 
+    embedded 
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono;">
+    
+    <!-- 预设Hiro标记：扫描这个标记就会显示内容 -->
+    <a-marker preset="hiro" id="hiroMarker">
+      
+      <!-- 绿色方块，尺寸适中（scale=0.3），带旋转动画 -->
+      <a-box 
+        position="0 0.2 0" 
+        scale="0.3 0.3 0.3"
+        material="color: #00E5FF; opacity: 0.9; metalness: 0.3; roughness: 0.4"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-box>
+      
+      <!-- 底部光环 -->
+      <a-ring 
+        radius-inner="0.2" radius-outer="0.3" 
+        position="0 0.02 0" rotation="-90 0 0"
+        material="color: #00E5FF; opacity: 0.5; side: double; transparent: true"
+        animation="property: scale; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000">
+      </a-ring>
+      
+      <!-- 文字标签 -->
+      <a-text 
+        value="AR Card!" 
+        position="0 0.55 0" 
+        align="center" 
+        color="#ffffff"
+        scale="0.8 0.8 0.8"
+        side="double">
+      </a-text>
+      
+    </a-marker>
+
+    <!-- 相机 -->
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    const debugEl = document.getElementById('debug');
+    const loadingEl = document.getElementById('loading');
+    const hintEl = document.getElementById('hint');
+    const marker = document.getElementById('hiroMarker');
+    
+    function log(msg) {
+      console.log(msg);
+      debugEl.innerHTML += msg + '<br>';
+    }
+    
+    // AR系统就绪
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      log('场景加载完成');
+    });
+    
+    // 摄像头视频流开始
+    document.querySelector('a-scene').addEventListener('arReady', () => {
+      log('摄像头已启动');
+      loadingEl.classList.add('hidden');
+      hintEl.classList.add('show');
+    });
+    
+    // 摄像头错误
+    document.querySelector('a-scene').addEventListener('arError', (e) => {
+      log('摄像头错误: ' + e.detail);
+      loadingEl.innerHTML = '<div style="color:#ff7b72">摄像头启动失败</div><div style="font-size:13px;color:#888;margin-top:8px;">请检查权限设置</div>';
+    });
+    
+    // 识别到标记
+    marker.addEventListener('markerFound', () => {
+      log('识别到标记！');
+      hintEl.innerHTML = '✨ 召唤成功！';
+    });
+    
+    // 标记丢失
+    marker.addEventListener('markerLost', () => {
+      log('标记丢失');
+      hintEl.innerHTML = '请对准 Hiro 标记图片';
+    });
+    
+    // 兜底：5秒后强制隐藏加载层
+    setTimeout(() => {
+      loadingEl.classList.add('hidden');
+      hintEl.classList.add('show');
+    }, 5000);
+  </script>
+</body>
+</html>
