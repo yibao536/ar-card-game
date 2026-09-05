@@ -55,13 +55,14 @@
     imageTargetSrc 指向你自己编译的识别目标文件（见使用说明）。
     filterMinCF / filterBeta / missTolerance 是可选跟踪参数，识别不稳时可微调。
   -->
-  <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.35; filterBeta: 0.02; missTolerance: 5; uiLoading: false; uiScanning: false; uiError: false;"
-    embedded
-    color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
+  <a-scene 
+  embedded 
+  arjs="sourceType: webcam; 
+        debugUIEnabled: false;
+        facingMode: environment;
+        videoTexture: true;
+        canvasWidth: 640; 
+        canvasHeight: 480;">
 
     <a-assets>
       <!--
